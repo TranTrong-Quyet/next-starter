@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Store } from "@prisma/client";
 import { Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
+import axios from "axios";
 
 import { Heading } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useParams, useRouter } from "next/navigation";
+import toast, { Toaster } from "react-hot-toast";
+import { AlertModal } from "@/components/modals/alert-modal";
 
 interface SettingFormProps {
   initialData: Store;
@@ -31,7 +35,8 @@ const formSchema = z.object({
 type settingsFormValue = z.infer<typeof formSchema>;
 
 const SettingForm: React.FC<SettingFormProps> = ({ initialData }) => {
-  const [isOpen, setOpen] = useState(false);
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<settingsFormValue>({
@@ -39,12 +44,48 @@ const SettingForm: React.FC<SettingFormProps> = ({ initialData }) => {
     defaultValues: initialData,
   });
 
+  const params = useParams();
+
   const onSubmit = async (data: settingsFormValue) => {
-    console.log(data);
+    try {
+      setIsLoading(true);
+      const response = await axios.patch(`/api/stores/${params.storeId}`, data);
+
+      console.log(response.data);
+      console.log(data);
+      toast.success("Updated Store successfully");
+    } catch (error) {
+      console.log("Error updating data in client side", error);
+      toast.error("Error updating store");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const onDelete = async () => {
+    try {
+      setIsLoading(true);
+      console.log(`/api/stores/${params.storeId}`);
+
+      await axios.delete(`/api/stores/${params.storeId}`);
+      router.push("/");
+
+      toast.success("Store has been deleted successfully");
+    } catch (error) {
+      console.log("Error deleting store", error);
+    } finally {
+      setIsLoading(false);
+      setIsOpen(false);
+    }
   };
 
   return (
     <>
+      <AlertModal
+        isOpen={isOpen}
+        loading={isLoading}
+        onClose={() => setIsOpen(false)}
+        onConfirm={onDelete}
+      />
       <div className="flex items-center justify-between">
         <Heading title={"Settings"} description={"Change Store Preprences"} />
         <Button
@@ -52,7 +93,7 @@ const SettingForm: React.FC<SettingFormProps> = ({ initialData }) => {
           size={"icon"}
           variant={"outline"}
           onClick={() => {
-            console.log("delete store");
+            setIsOpen(true);
           }}
         >
           <Trash className="w-3 h-3" />
@@ -61,7 +102,7 @@ const SettingForm: React.FC<SettingFormProps> = ({ initialData }) => {
       <Separator className="my-4" />
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pb-4">
-          <div className="grid grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8">
             <FormField
               control={form.control}
               name="name"
