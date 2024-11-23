@@ -5,7 +5,7 @@ import prismadb from "@/lib/prismadb";
 
 export const POST = async (req: Request) => {
   try {
-    const { userId } = getAuth(req);
+    const { userId } = getAuth(req as NextRequest);
     const body = await req.json();
 
     const { name } = body;
