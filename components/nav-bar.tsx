@@ -9,7 +9,7 @@ const NavBar = async (props: Props) => {
   const { userId } = await auth();
   const stores = await prismadb.store.findMany({
     where: {
-      userId: userId,
+      userId,
     },
   });
 
@@ -18,7 +18,7 @@ const NavBar = async (props: Props) => {
       <div className="flex px-4 xl:px-8 items-center py-2 min-h-16">
         <StoreSwicher items={stores} />
         <div className="px-2 flex items-center">
-          <MainNav className="bg-yellow-300" />
+          <MainNav className="px-1 xl:px-5" />
         </div>
         <div className="flex ml-auto items-center space-x-4">
           <UserButton afterSwitchSessionUrl="/" />
